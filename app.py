@@ -38,6 +38,14 @@ def require_api_key(view_function):
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 #OPEN AI initialization
 
+@app.route('/test_route', methods=['POST'])
+@require_api_key
+@limiter.limit("30 per minute")
+def test_route():
+    content = request.json
+    video_url = content.get('video_url', '')
+    return {"transcript": video_url}
+
 @app.route('/get_video_transcript', methods=['POST'])
 @require_api_key
 @limiter.limit("30 per minute")
