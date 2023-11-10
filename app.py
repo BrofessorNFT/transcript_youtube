@@ -1,5 +1,3 @@
-from youtube_transcript_api import YouTubeTranscriptApi
-
 from flask import Flask
 import bleach
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -12,12 +10,34 @@ import re
 
 # Initialize Flask app
 app = Flask(__name__)
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path, verbose=True)
+
+def require_api_key(view_function):
+    @wraps(view_function)
+    def decorated_function(*args, **kwargs):
+        api_keys = os.environ.get('API_KEYS')
+        
+        # Check if API keys are loaded
+        if api_keys is None:
+            raise EnvironmentError("API keys not loaded. Ensure your .env file is configured correctly.")
+        
+        api_keys_list = api_keys.split(',')
+        auth_header = request.headers.get('Authorization')
+        
+        if auth_header and any(f'Bearer {key}' == auth_header for key in api_keys_list):
+            return view_function(*args, **kwargs)
+        else:
+            return jsonify(error="Invalid API key"), 401
+    return decorated_function
+
 
 # Initialize Limiter
 limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
 #OPEN AI initialization
 
 @app.route('/get_video_transcript', methods=['POST'])
+@require_api_key
 @limiter.limit("30 per minute")
 def get_video_transcript():
     content = request.json
@@ -43,7 +63,10 @@ def extract_video_id(url_or_id):
         return url_or_id.split('=')[1].split('&')[0]
     return url_or_id
 
-
+@app.route('/health', methods=['GET'])
+@require_api_key
+def health_check():
+    return jsonify(status="UP"), 200
 
 def sanitize_text(text):
   # define the allowed HTML tags, attributes and styles
