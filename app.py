@@ -1,13 +1,15 @@
 from flask import Flask
 import bleach
 from youtube_transcript_api import YouTubeTranscriptApi
-
+import os
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
-
+from functools import wraps  
+import os
+from dotenv import load_dotenv
 # Initialize Flask app
 app = Flask(__name__)
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
