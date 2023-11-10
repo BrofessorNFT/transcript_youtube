@@ -44,7 +44,7 @@ limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "5
 def get_video_transcript():
     content = request.json
     video_url = content.get('video_url', '')
-
+    print(f'video_url ={video_url}')
     # Input validation for YouTube URL or ID
     if not re.match(r'^(https:\/\/www\.youtube\.com\/watch\?v=)?[a-zA-Z0-9_-]{11}', video_url):
         return jsonify({"error": "Invalid YouTube URL or ID"}), 400
@@ -52,7 +52,7 @@ def get_video_transcript():
 
 
     video_id = extract_video_id(video_url)
-
+    print(f'video_id ={video_id}')
     try:
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         return jsonify({"transcript": " ".join([d['text'] for d in transcript])})
@@ -66,6 +66,7 @@ def extract_video_id(url_or_id):
     return url_or_id
 
 @app.route('/health', methods=['GET'])
+@limiter.limit("30 per minute")
 @require_api_key
 def health_check():
     return jsonify(status="UP"), 200
