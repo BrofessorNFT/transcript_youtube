@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import bleach
 from youtube_transcript_api import YouTubeTranscriptApi
 import os
@@ -42,9 +42,10 @@ limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "5
 @limiter.limit("30 per minute")
 @require_api_key
 def test_route():
+    data = request.json
     # content = request.json
-    # video_url = content.get('video_url', '')
-    return {"transcript": 'video url'}
+    video_url = content.get('video_url', '')
+    return {"transcript": video_url}
 
 @app.route('/get_video_transcript', methods=['POST', 'GET'])
 @limiter.limit("30 per minute")
